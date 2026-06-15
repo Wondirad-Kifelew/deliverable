@@ -96,7 +96,22 @@ app.post('/reservations/:id/checkout', async (req, res) => {
     client.release();
   }
 });
+// GET reservation status (for frontend polling/countdown)
+app.get('/reservations/:id', async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM reservations WHERE id = $1', [req.params.id]);
+  const reservation = rows[0];
 
+  if (!reservation) {
+    return res.status(404).json({ error: 'Reservation not found' });
+  }
+
+  // lazy check so the frontend sees accurate status even before the sweep job runs
+  if (reservation.status === 'PENDING' && new Date(reservation.expires_at) < new Date()) {
+    reservation.status = 'EXPIRED';
+  }
+
+  res.json(reservation);
+});
 // Background job: expire old reservations every 10s
 setInterval(async () => {
   const client = await pool.connect();
