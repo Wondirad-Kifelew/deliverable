@@ -115,9 +115,7 @@ app.post('/reservations/:id/checkout', async (req, res) => {
 app.get('/reservations/:id', async (req, res) => {
   const reservationId = req.params.id;
   const client = await pool.connect();
-  
-  // const { rows } = await pool.query('SELECT * FROM reservations WHERE id = $1', [req.params.id]);
-  // const reservation = rows[0];
+
    
   
   try {
