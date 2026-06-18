@@ -9,6 +9,18 @@ A simple demo UI that simulates a product reservation and checkout flow. No auth
 - The user must complete checkout within that window or the hold expires and the item returns to inventory
 - Reservations page shows a live countdown with active holds and history
 
+## Assumptions
+
+
+- A user is already logged in and there is no authentication in this demo. In a real system, the reservation would be tied to a user account
+- A payment step exists between reserving and checking out. The 60 second window is meant to cover that flow. Here the checkout button represents the moment after payment would have been confirmed, but no actual payment is processed
+
+
+## Tradeoffs
+
+
+All frontend code lives in a single file (App.jsx). Splitting it into separate component files would be the natural next step, but it would also require a shared state solution.  Either lifting state higher, using a context, or bringing in a state management library to pass reservations and handlers across components. For a demo of this size, one file keeps things simple and easy to follow
+
 ## Stack
 
 - **Frontend** — React
