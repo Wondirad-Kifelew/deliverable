@@ -1,11 +1,26 @@
-const express = require('express');
-const pool = require('./db');
-
+import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
+import pool from './db';
+import cors from 'cors';
+ 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-const RESERVATION_TTL_MS = 60 * 1000; // 1 minute for easy testing
+const RESERVATION_TTL_MS = 60 * 1000; //1 minute
 
+async function testConnection() {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    console.log('Connected to PostgreSQL!');
+    console.log(result.rows[0]);
+  } catch (err) {
+    console.error('Connection failed:', err);
+  }
+}
+
+testConnection();
 // GET all products
 app.get('/products', async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM products');
@@ -59,7 +74,7 @@ app.post('/reservations/:id/checkout', async (req, res) => {
 
   try {
     await client.query('BEGIN');
-
+// check if the reservation is there,  pending or not expired if not rollback
     const { rows } = await client.query(
       'SELECT * FROM reservations WHERE id = $1 FOR UPDATE',
       [reservationId],
@@ -83,7 +98,7 @@ app.post('/reservations/:id/checkout', async (req, res) => {
       await client.query('COMMIT');
       return res.status(410).json({ error: 'Reservation expired' });
     }
-
+// res.. exists, not expired and status is pending then pay (assume the client paid here)
     await client.query(`UPDATE reservations SET status = 'COMPLETED' WHERE id = $1`, [reservationId]);
     await client.query('COMMIT');
 
@@ -98,21 +113,54 @@ app.post('/reservations/:id/checkout', async (req, res) => {
 });
 // GET reservation status (for frontend polling/countdown)
 app.get('/reservations/:id', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM reservations WHERE id = $1', [req.params.id]);
-  const reservation = rows[0];
+  const reservationId = req.params.id;
+  const client = await pool.connect();
+  
+  // const { rows } = await pool.query('SELECT * FROM reservations WHERE id = $1', [req.params.id]);
+  // const reservation = rows[0];
+   
+  
+  try {
+    
+    const { rows } = await client.query(
+      'SELECT * FROM reservations WHERE id = $1',
+      [reservationId]
+    );
+    const reservation = rows[0];
 
   if (!reservation) {
     return res.status(404).json({ error: 'Reservation not found' });
   }
-
-  // lazy check so the frontend sees accurate status even before the sweep job runs
+  
   if (reservation.status === 'PENDING' && new Date(reservation.expires_at) < new Date()) {
+      await client.query('BEGIN');
+
+      await client.query(
+        `UPDATE reservations SET status = 'EXPIRED' WHERE id = $1`, 
+        [reservationId]);
+      await client.query(
+        `UPDATE products SET available_quantity = available_quantity + 1 WHERE id = $1`,
+        [reservation.product_id]
+      );
+
+      await client.query('COMMIT');
+
     reservation.status = 'EXPIRED';
+    
   }
 
   res.json(reservation);
-});
-// Background job: expire old reservations every 10s
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error(error);
+    res.status(500).json({ error: 'Something went wrong' });
+  }finally{
+  client.release();
+}
+}
+);
+// Background job: this catches if there are abandoned reservations so they wont lock
+// the stock forever.It checks expiry of curr resrvations every 10 seconds
 setInterval(async () => {
   const client = await pool.connect();
   try {
