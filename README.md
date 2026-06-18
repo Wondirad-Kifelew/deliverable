@@ -21,6 +21,12 @@ A simple demo UI that simulates a product reservation and checkout flow. No auth
 
 All frontend code lives in a single file (App.jsx). Splitting it into separate component files would be the natural next step, but it would also require a shared state solution.  Either lifting state higher, using a context, or bringing in a state management library to pass reservations and handlers across components. For a demo of this size, one file keeps things simple and easy to follow
 
+## If I had more time
+
+- I would add a payment method before checkout, learning along the way.
+- Move the files to separate files and having a state management functionality so it will be more scalable
+- Add auth
+
 ## Stack
 
 - **Frontend** — React
@@ -28,6 +34,7 @@ All frontend code lives in a single file (App.jsx). Splitting it into separate c
 - **Database** — PostgreSQL
 
 PostgreSQL was chosen specifically for its **transaction support**. Every reserve and checkout operation runs inside a transaction so that if anything fails halfway through (or two users try to grab the last item at the same time), the database stays consistent and inventory counts never get out of sync.
+
 
 ## Getting started
 
