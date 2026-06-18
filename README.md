@@ -11,7 +11,7 @@ A simple demo UI that simulates a product reservation and checkout flow. No auth
 
 ## Stack
 
-- **Frontend** — React + Vite (no router library, just state)
+- **Frontend** — React
 - **Backend** — Node.js + Express + TypeScript
 - **Database** — PostgreSQL
 
