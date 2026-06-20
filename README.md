@@ -5,7 +5,7 @@ A simple demo UI that simulates a product reservation and checkout flow. No auth
 ## Live links
 
 - **Frontend** — [Product Drop](https://deliverable-gray.vercel.app/)
-- **Backend** — [API](https://deliverable-k8mr.onrender.com)
+- **Backend** — [API](https://deliverable-k8mr.onrender.com/products)
 
 ## What it does
 
