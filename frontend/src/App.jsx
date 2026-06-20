@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
-// const API = "http://localhost:3000";
-const API = import.meta.env.VITE_API_URL;
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Persisted reservations in localStorage
 const STORAGE_KEY = "pd_reservations";
