@@ -2,6 +2,11 @@
 
 A simple demo UI that simulates a product reservation and checkout flow. No auth, no payments — just to demonstrate the reservation process.
 
+## Live links
+
+- **Frontend** — [Product Drop](https://deliverable-gray.vercel.app/)
+- **Backend** — [API](https://deliverable-k8mr.onrender.com)
+
 ## What it does
 
 - Displays available products fetched from the database
@@ -36,11 +41,31 @@ All frontend code lives in a single file (App.jsx). Splitting it into separate c
 PostgreSQL was chosen specifically for its **transaction support**. Every reserve and checkout operation runs inside a transaction so that if anything fails halfway through (or two users try to grab the last item at the same time), the database stays consistent and inventory counts never get out of sync.
 
 
-## Getting started
+## Getting started (If you want to run it locally)
 
 ### 1. Set up the database
 
-Create a PostgreSQL database and make sure you have a `products` and `reservations` table set up.
+Create a PostgreSQL database and make sure you have a `products` and `reservations` table set up. Use this to create the tables.
+
+``` sql 
+-- Create tables
+CREATE TABLE public.products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    total_quantity INTEGER NOT NULL,
+    available_quantity INTEGER NOT NULL
+);
+
+CREATE TABLE public.reservations (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES public.products(id),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+```
 
 ### 2. Configure the backend
 
